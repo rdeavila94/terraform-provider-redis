@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_amd64
+          GOOS=linux GOARCH=arm64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_arm64
+          GOOS=darwin GOARCH=amd64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_amd64
+          GOOS=darwin GOARCH=arm64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_arm64
+          GOOS=windows GOARCH=amd64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_windows_amd64.exe
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_amd64
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_arm64
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_amd64
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_arm64
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_windows_amd64.exe
+          generate_release_notes: true 
