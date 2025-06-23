@@ -14,27 +14,58 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.23'
 
+      - name: Set up GPG
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+
       - name: Build
         run: |
-          GOOS=linux GOARCH=amd64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_amd64
-          GOOS=linux GOARCH=arm64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_arm64
-          GOOS=darwin GOARCH=amd64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_amd64
-          GOOS=darwin GOARCH=arm64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_arm64
-          GOOS=windows GOARCH=amd64 go build -o terraform-provider-redis_${GITHUB_REF#refs/tags/}_windows_amd64.exe
+          VERSION=${GITHUB_REF#refs/tags/}
+          PROVIDER_NAME="terraform-provider-redis"
+          
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION}_linux_amd64
+          GOOS=linux GOARCH=arm64 go build -o ${PROVIDER_NAME}_${VERSION}_linux_arm64
+          GOOS=darwin GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION}_darwin_amd64
+          GOOS=darwin GOARCH=arm64 go build -o ${PROVIDER_NAME}_${VERSION}_darwin_arm64
+          GOOS=windows GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION}_windows_amd64.exe
+          
+          # Create zip files
+          zip ${PROVIDER_NAME}_${VERSION}_linux_amd64.zip ${PROVIDER_NAME}_${VERSION}_linux_amd64
+          zip ${PROVIDER_NAME}_${VERSION}_linux_arm64.zip ${PROVIDER_NAME}_${VERSION}_linux_arm64
+          zip ${PROVIDER_NAME}_${VERSION}_darwin_amd64.zip ${PROVIDER_NAME}_${VERSION}_darwin_amd64
+          zip ${PROVIDER_NAME}_${VERSION}_darwin_arm64.zip ${PROVIDER_NAME}_${VERSION}_darwin_arm64
+          zip ${PROVIDER_NAME}_${VERSION}_windows_amd64.zip ${PROVIDER_NAME}_${VERSION}_windows_amd64.exe
+          
+          # Copy manifest file
+          cp terraform-registry-manifest.json ${PROVIDER_NAME}_${VERSION}_manifest.json
+          
+          # Create SHA256SUMS file
+          shasum -a 256 *.zip ${PROVIDER_NAME}_${VERSION}_manifest.json > ${PROVIDER_NAME}_${VERSION}_SHA256SUMS
+          
+          # Sign the SHA256SUMS file
+          gpg --detach-sign ${PROVIDER_NAME}_${VERSION}_SHA256SUMS
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_amd64
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_arm64
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_amd64
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_arm64
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_windows_amd64.exe
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_amd64.zip
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_arm64.zip
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_amd64.zip
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_arm64.zip
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_windows_amd64.zip
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_manifest.json
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_SHA256SUMS
+            terraform-provider-redis_${GITHUB_REF#refs/tags/}_SHA256SUMS.sig
           generate_release_notes: true 
