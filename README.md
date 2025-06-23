@@ -118,7 +118,7 @@ resource "redis_string" "existing_key" {
 ```bash
 git clone https://github.com/floqast/terraform-provider-redis
 cd terraform-provider-redis
-go build -o terraform-provider-redis
+make build
 ```
 
 ### Running Tests
@@ -142,11 +142,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 For support, please open an issue on GitHub or contact the maintainers.
-
-## Changelog
-
-### v0.0.1
-- Initial release
-- Basic Redis string resource support
-- Traefik configuration module
-- Added `overridable` parameter for managing existing keys 

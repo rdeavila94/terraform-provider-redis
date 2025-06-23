@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/example/terraform-provider-redis/redisprovider"
+	"terraform-provider-redis/redisprovider"
 )
 
 func main() {
