@@ -1,7 +1,7 @@
 terraform {
     required_providers {
         redis = {
-            source = "local/floqast/redis"
+            source = "local/rdeavila94/redis"
             version = "~> 0.0"
         }
     }

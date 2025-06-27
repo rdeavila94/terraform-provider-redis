@@ -19,8 +19,8 @@ terraform init
 
 1. Download the latest release for your platform
 2. Extract the binary to your Terraform plugins directory:
-   - Linux/macOS: `~/.terraform.d/plugins/registry.terraform.io/floqast/redis/`
-   - Windows: `%APPDATA%\terraform.d\plugins\registry.terraform.io\floqast\redis\`
+   - Linux/macOS: `~/.terraform.d/plugins/registry.terraform.io/rdeavila94/redis/`
+   - Windows: `%APPDATA%\terraform.d\plugins\registry.terraform.io\rdeavila94\redis\`
 
 ## Usage
 
@@ -30,7 +30,7 @@ terraform init
 terraform {
   required_providers {
     redis = {
-      source  = "floqast/redis"
+      source  = "rdeavila94/redis"
       version = "~> 0.0"
     }
   }
@@ -79,7 +79,7 @@ Currently, this provider does not include data sources.
 terraform {
   required_providers {
     redis = {
-      source  = "floqast/redis"
+      source  = "rdeavila94/redis"
       version = "~> 0.0"
     }
   }
@@ -116,7 +116,7 @@ resource "redis_string" "existing_key" {
 ### Building from Source
 
 ```bash
-git clone https://github.com/floqast/terraform-provider-redis
+git clone https://github.com/rdeavila94/terraform-provider-redis
 cd terraform-provider-redis
 make build
 ```

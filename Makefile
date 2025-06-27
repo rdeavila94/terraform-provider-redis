@@ -2,7 +2,7 @@
 
 BINARY_NAME=terraform-provider-redis
 HOSTNAME=local
-NAMESPACE=floqast
+NAMESPACE=rdeavila94
 NAME=redis
 VERSION=0.0.1
 OS_ARCH := $(shell go env GOOS)_$(shell go env GOARCH)
