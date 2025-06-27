@@ -1,6 +1,6 @@
 # Terraform Provider for Redis
 
-A Terraform provider for managing Redis key-value pairs and configurations.
+A Terraform provider for managing Redis keys. Useful for when Redis is used as a store for infrastructure or application configuration.
 
 ## Requirements
 

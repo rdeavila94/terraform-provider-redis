@@ -1,4 +1,4 @@
-resource "redis_entry" "example" {
-    name = "example"
+resource "redis_string" "example" {
+    key = "example"
     value = "value"
 }
