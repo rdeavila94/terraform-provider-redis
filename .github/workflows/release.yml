@@ -1,4 +1,4 @@
-name: Release
+name: Release {{ github.ref_name }}
 
 on:
   push:
@@ -29,9 +29,11 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
 
       - name: Build
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
           PROVIDER_NAME="terraform-provider-redis"
+          echo "Building version: $VERSION"
           
           # Build for multiple platforms
           GOOS=linux GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION}_linux_amd64
@@ -55,17 +57,21 @@ jobs:
           
           # Sign the SHA256SUMS file
           gpg --detach-sign ${PROVIDER_NAME}_${VERSION}_SHA256SUMS
+          
+          # List files for debugging
+          echo "Files created:"
+          ls -la terraform-provider-redis_*
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_amd64.zip
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_linux_arm64.zip
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_amd64.zip
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_darwin_arm64.zip
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_windows_amd64.zip
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_manifest.json
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_SHA256SUMS
-            terraform-provider-redis_${GITHUB_REF#refs/tags/}_SHA256SUMS.sig
+            terraform-provider-redis_${{ github.ref_name }}_linux_amd64.zip
+            terraform-provider-redis_${{ github.ref_name }}_linux_arm64.zip
+            terraform-provider-redis_${{ github.ref_name }}_darwin_amd64.zip
+            terraform-provider-redis_${{ github.ref_name }}_darwin_arm64.zip
+            terraform-provider-redis_${{ github.ref_name }}_windows_amd64.zip
+            terraform-provider-redis_${{ github.ref_name }}_manifest.json
+            terraform-provider-redis_${{ github.ref_name }}_SHA256SUMS
+            terraform-provider-redis_${{ github.ref_name }}_SHA256SUMS.sig
           generate_release_notes: true 
