@@ -210,4 +210,87 @@ resource "redis_string" "test" {
 			},
 		},
 	})
-} 
+}
+
+func TestResourceRedisStringImport_Success(t *testing.T) {
+	client, mock := redismock.NewClientMock()
+	cfg := &ProviderConfig{RedisClient: client}
+	ctx := context.Background()
+
+	// Create test resource data with an ID (key)
+	d := schema.TestResourceDataRaw(t, resourceRedisString().Schema, map[string]interface{}{})
+	d.SetId("test-import-key")
+
+	// Mock successful Redis GET
+	expectedValue := "test-import-value"
+	mock.ExpectGet("test-import-key").SetVal(expectedValue)
+
+	// Call the import function
+	result, err := resourceRedisStringImport(ctx, d, cfg)
+
+	// Assertions
+	assert.NoError(t, err, "should not error on successful import")
+	assert.Len(t, result, 1, "should return exactly one ResourceData")
+	assert.Equal(t, d, result[0], "should return the same ResourceData")
+	assert.Equal(t, "test-import-key", d.Get("key"), "should set the key correctly")
+	assert.Equal(t, expectedValue, d.Get("value"), "should set the value correctly")
+	assert.Equal(t, "test-import-key", d.Id(), "should preserve the ID")
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestResourceRedisStringImport_KeyNotFound(t *testing.T) {
+	client, mock := redismock.NewClientMock()
+	cfg := &ProviderConfig{RedisClient: client}
+	ctx := context.Background()
+
+	// Create test resource data with an ID (key)
+	d := schema.TestResourceDataRaw(t, resourceRedisString().Schema, map[string]interface{}{})
+	d.SetId("nonexistent-key")
+
+	// Mock Redis GET returning Nil (key not found)
+	mock.ExpectGet("nonexistent-key").RedisNil()
+
+	// Call the import function
+	result, err := resourceRedisStringImport(ctx, d, cfg)
+
+	// Assertions
+	assert.Error(t, err, "should error when key is not found")
+	assert.Contains(t, err.Error(), "redis key 'nonexistent-key' not found", "should contain appropriate error message")
+	assert.Nil(t, result, "should return nil result on error")
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestResourceRedisStringImport_RedisError(t *testing.T) {
+	client, mock := redismock.NewClientMock()
+	cfg := &ProviderConfig{RedisClient: client}
+	ctx := context.Background()
+
+	// Create test resource data with an ID (key)
+	d := schema.TestResourceDataRaw(t, resourceRedisString().Schema, map[string]interface{}{})
+	d.SetId("error-key")
+
+	// Mock Redis GET returning an error
+	expectedError := fmt.Errorf("connection timeout")
+	mock.ExpectGet("error-key").SetErr(expectedError)
+
+	// Call the import function
+	result, err := resourceRedisStringImport(ctx, d, cfg)
+
+	// Assertions
+	assert.Error(t, err, "should error when Redis returns an error")
+	assert.Equal(t, expectedError, err, "should return the Redis error")
+	assert.Nil(t, result, "should return nil result on error")
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}

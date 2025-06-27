@@ -2,10 +2,11 @@ package redisprovider
 
 import (
 	"context"
+	"fmt"
 
-	redis "github.com/redis/go-redis/v9"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	redis "github.com/redis/go-redis/v9"
 )
 
 func resourceRedisString() *schema.Resource {
@@ -14,6 +15,9 @@ func resourceRedisString() *schema.Resource {
 		ReadContext:   resourceRedisStringRead,
 		UpdateContext: resourceRedisStringUpdate,
 		DeleteContext: resourceRedisStringDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceRedisStringImport,
+		},
 		Schema: map[string]*schema.Schema{
 			"key": {
 				Type:     schema.TypeString,
@@ -45,7 +49,7 @@ func resourceRedisStringCreate(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 	if exists > 0 && !overridable {
-		return diag.Errorf("Redis key '%s' already exists. Set overridable = true to allow overriding existing keys", key)
+		return diag.Errorf("redis key '%s' already exists. Set overridable = true to allow overriding existing keys", key)
 	}
 	if err := cfg.RedisClient.Set(ctx, key, value, 0).Err(); err != nil {
 		return diag.FromErr(err)
@@ -87,4 +91,18 @@ func resourceRedisStringDelete(ctx context.Context, d *schema.ResourceData, m in
 	}
 	d.SetId("")
 	return nil
-} 
+}
+
+func resourceRedisStringImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	key := d.Id()
+	cfg := m.(*ProviderConfig)
+	val, err := cfg.RedisClient.Get(ctx, key).Result()
+	if err == redis.Nil {
+		return nil, fmt.Errorf("redis key '%s' not found", key)
+	} else if err != nil {
+		return nil, err
+	}
+	d.Set("key", key)
+	d.Set("value", val)
+	return []*schema.ResourceData{d}, nil
+}

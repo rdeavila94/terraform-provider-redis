@@ -27,3 +27,5 @@ go.work.sum
 
 /example/.terraform*
 /example/terraform*
+
+.devcontainer/

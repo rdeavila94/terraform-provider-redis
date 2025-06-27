@@ -1,6 +1,9 @@
 # Changelog
 
-## v0.0.1
+## [Unreleased]
+
+## [v0.0.1] - 2025-06-27
+### Added
 - Initial release
 - Basic Redis string resource support
 - Traefik configuration module
