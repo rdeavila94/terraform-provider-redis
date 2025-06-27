@@ -3,9 +3,9 @@ package redisprovider
 import (
 	"context"
 
-	redis "github.com/redis/go-redis/v9"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	redis "github.com/redis/go-redis/v9"
 )
 
 type ProviderConfig struct {
@@ -16,8 +16,8 @@ func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"redis_url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "Redis server URL, e.g. redis://localhost:6379/0",
 			},
 		},

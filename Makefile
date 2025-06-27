@@ -4,7 +4,7 @@ BINARY_NAME=terraform-provider-redis
 HOSTNAME=local
 NAMESPACE=rdeavila94
 NAME=redis
-VERSION=0.0.1
+VERSION=0.0.2
 OS_ARCH := $(shell go env GOOS)_$(shell go env GOARCH)
 BINARY=terraform-provider-${NAME}_v$(VERSION)
 
