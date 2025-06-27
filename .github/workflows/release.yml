@@ -30,48 +30,40 @@ jobs:
 
       - name: Build
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION_WITH_V: ${{ github.ref_name }}
         run: |
           PROVIDER_NAME="terraform-provider-redis"
-          echo "Building version: $VERSION"
+          VERSION_WITHOUT_V=${VERSION_WITH_V#v}
+          echo "Building version: $VERSION_WITH_V (files will use: $VERSION_WITHOUT_V)"
           
-          # Build for multiple platforms
-          GOOS=linux GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION}_linux_amd64
-          GOOS=linux GOARCH=arm64 go build -o ${PROVIDER_NAME}_${VERSION}_linux_arm64
-          GOOS=darwin GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION}_darwin_amd64
-          GOOS=darwin GOARCH=arm64 go build -o ${PROVIDER_NAME}_${VERSION}_darwin_arm64
-          GOOS=windows GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION}_windows_amd64.exe
+          # Build for multiple platforms (binaries include 'v')
+          GOOS=linux GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION_WITH_V}_linux_amd64
+          GOOS=linux GOARCH=arm64 go build -o ${PROVIDER_NAME}_${VERSION_WITH_V}_linux_arm64
+          GOOS=darwin GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION_WITH_V}_darwin_amd64
+          GOOS=darwin GOARCH=arm64 go build -o ${PROVIDER_NAME}_${VERSION_WITH_V}_darwin_arm64
+          GOOS=windows GOARCH=amd64 go build -o ${PROVIDER_NAME}_${VERSION_WITH_V}_windows_amd64.exe
           
-          # Create zip files
-          zip ${PROVIDER_NAME}_${VERSION}_linux_amd64.zip ${PROVIDER_NAME}_${VERSION}_linux_amd64
-          zip ${PROVIDER_NAME}_${VERSION}_linux_arm64.zip ${PROVIDER_NAME}_${VERSION}_linux_arm64
-          zip ${PROVIDER_NAME}_${VERSION}_darwin_amd64.zip ${PROVIDER_NAME}_${VERSION}_darwin_amd64
-          zip ${PROVIDER_NAME}_${VERSION}_darwin_arm64.zip ${PROVIDER_NAME}_${VERSION}_darwin_arm64
-          zip ${PROVIDER_NAME}_${VERSION}_windows_amd64.zip ${PROVIDER_NAME}_${VERSION}_windows_amd64.exe
+          # Create zip files (zip names without 'v')
+          zip ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_linux_amd64.zip ${PROVIDER_NAME}_${VERSION_WITH_V}_linux_amd64
+          zip ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_linux_arm64.zip ${PROVIDER_NAME}_${VERSION_WITH_V}_linux_arm64
+          zip ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_darwin_amd64.zip ${PROVIDER_NAME}_${VERSION_WITH_V}_darwin_amd64
+          zip ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_darwin_arm64.zip ${PROVIDER_NAME}_${VERSION_WITH_V}_darwin_arm64
+          zip ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_windows_amd64.zip ${PROVIDER_NAME}_${VERSION_WITH_V}_windows_amd64.exe
           
-          # Copy manifest file
-          cp terraform-registry-manifest.json ${PROVIDER_NAME}_${VERSION}_manifest.json
+          # Copy manifest file (without 'v')
+          cp terraform-registry-manifest.json ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_manifest.json
           
-          # Create SHA256SUMS file
-          shasum -a 256 *.zip ${PROVIDER_NAME}_${VERSION}_manifest.json > ${PROVIDER_NAME}_${VERSION}_SHA256SUMS
+          # Create SHA256SUMS file (without 'v')
+          shasum -a 256 *.zip ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_manifest.json > ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_SHA256SUMS
           
           # Sign the SHA256SUMS file
-          gpg --detach-sign ${PROVIDER_NAME}_${VERSION}_SHA256SUMS
-          
-          # List files for debugging
-          echo "Files created:"
-          ls -la terraform-provider-redis_*
+          gpg --detach-sign ${PROVIDER_NAME}_${VERSION_WITHOUT_V}_SHA256SUMS
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            terraform-provider-redis_${{ github.ref_name }}_linux_amd64.zip
-            terraform-provider-redis_${{ github.ref_name }}_linux_arm64.zip
-            terraform-provider-redis_${{ github.ref_name }}_darwin_amd64.zip
-            terraform-provider-redis_${{ github.ref_name }}_darwin_arm64.zip
-            terraform-provider-redis_${{ github.ref_name }}_windows_amd64.zip
-            terraform-provider-redis_${{ github.ref_name }}_manifest.json
-            terraform-provider-redis_${{ github.ref_name }}_SHA256SUMS
-            terraform-provider-redis_${{ github.ref_name }}_SHA256SUMS.sig
+            terraform-provider-redis_*.zip
+            terraform-provider-redis_*_manifest.json
+            terraform-provider-redis_*_SHA256SUMS*
           generate_release_notes: true 
